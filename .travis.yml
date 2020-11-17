@@ -1,0 +1,23 @@
+language: generic
+sudo: required
+services:
+  - docker
+
+before_install:
+  - dockerbuild -t jsuleto/react-test -f ./client/Dockerfile.dev ./client
+  
+script:
+  - docker run -e CI=true jsuleto/react-test npm test
+
+after_success:
+  - docker build -t jsuleto/multi-client ./client
+  - docker build -t jsuleto/multi-nginx ./nginx
+  - docker build -t jsuleto/multi-server ./server
+  - docker build -t jsuleto/multi-worker ./worker
+  #login docker
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  #Push to dockerhub
+  - docker push jsuleto/multi-client
+  - docker push jsuleto/multi-nginx
+  - docker push jsuleto/multi-server
+  - docker push jsuleto/multi-worker
